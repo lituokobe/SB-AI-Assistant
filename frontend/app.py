@@ -35,10 +35,9 @@ from frontend.components.chatbot import (
 )
 from frontend.components.sidebar import render_profile_html
 
-# Each page load gets a fresh session AND a fresh user profile,
-# so the demo always starts with an empty User Profile sidebar.
-SESSION_ID = str(uuid.uuid4())
-USER_ID = SESSION_ID
+# Session IDs are generated per browser session via gr.State inside
+# build_app(), so each visitor gets an isolated profile — critical for
+# HF Spaces where multiple users share the same process.
 
 # ---------------------------------------------------------------------------
 # Company-branded CSS (ShopBack colour scheme + Roboto font)
@@ -207,6 +206,11 @@ def build_app() -> gr.Blocks:
                     label="User Profile",
                 )
 
+        # Per-session UUID — each browser session gets a unique ID,
+        # so the profile is isolated per visitor (critical for HF Spaces
+        # where multiple users share the same process).
+        session_state = gr.State(value=lambda: str(uuid.uuid4()))
+
         # --- Output list (order matters!) ---
         outputs = [
             msg_input, chatbot, btn1, btn2, btn3,
@@ -216,39 +220,39 @@ def build_app() -> gr.Blocks:
 
         # --- Event handlers ---
 
-        async def on_send(message, history):
+        async def on_send(message, history, session_id):
             """Handle typed message submission."""
             if not message.strip():
                 return build_no_change_outputs()
-            return await handle_user_message(message, history, SESSION_ID, USER_ID)
+            return await handle_user_message(message, history, session_id, session_id)
 
-        async def on_btn1_click(btn_val, history):
+        async def on_btn1_click(btn_val, history, session_id):
             """Handle quick-tap button 1."""
-            return await handle_button_click(btn_val, history, SESSION_ID, USER_ID)
+            return await handle_button_click(btn_val, history, session_id, session_id)
 
-        async def on_btn2_click(btn_val, history):
+        async def on_btn2_click(btn_val, history, session_id):
             """Handle quick-tap button 2."""
-            return await handle_button_click(btn_val, history, SESSION_ID, USER_ID)
+            return await handle_button_click(btn_val, history, session_id, session_id)
 
-        async def on_btn3_click(btn_val, history):
+        async def on_btn3_click(btn_val, history, session_id):
             """Handle quick-tap button 3."""
-            return await handle_button_click(btn_val, history, SESSION_ID, USER_ID)
+            return await handle_button_click(btn_val, history, session_id, session_id)
 
-        async def on_travel_submit(group, start, end, history):
+        async def on_travel_submit(group, start, end, history, session_id):
             """Handle travel field submission."""
-            return await handle_travel_submit(group, start, end, history, SESSION_ID, USER_ID)
+            return await handle_travel_submit(group, start, end, history, session_id, session_id)
 
         # Wire up events -- pass button component as input to get current label
-        send_btn.click(on_send, [msg_input, chatbot], outputs)
-        msg_input.submit(on_send, [msg_input, chatbot], outputs)
+        send_btn.click(on_send, [msg_input, chatbot, session_state], outputs)
+        msg_input.submit(on_send, [msg_input, chatbot, session_state], outputs)
 
-        btn1.click(on_btn1_click, [btn1, chatbot], outputs)
-        btn2.click(on_btn2_click, [btn2, chatbot], outputs)
-        btn3.click(on_btn3_click, [btn3, chatbot], outputs)
+        btn1.click(on_btn1_click, [btn1, chatbot, session_state], outputs)
+        btn2.click(on_btn2_click, [btn2, chatbot, session_state], outputs)
+        btn3.click(on_btn3_click, [btn3, chatbot, session_state], outputs)
 
         travel_submit.click(
             on_travel_submit,
-            [travel_group, travel_start, travel_end, chatbot],
+            [travel_group, travel_start, travel_end, chatbot, session_state],
             outputs,
         )
 

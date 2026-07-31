@@ -42,8 +42,11 @@ Thumbs.db
 .env.*
 !env.example
 
-# Vibe coding
+# Vibe coding (internal docs — not deployed)
 AGENTS.md
 MOCKING_STRATEGY.md
 PROJECT_GUIDE.md
-UI_demo.png
+
+# Binary screenshot — tracked for GitHub README but excluded from
+# HF Space pushes via deploy_hf.sh (HF rejects binary files in git history).
+# Do NOT add UI_demo.png here; it must stay tracked for GitHub.
