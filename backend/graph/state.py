@@ -1,0 +1,1 @@
+# TypedDict/Pydantic definition of the Agent State
