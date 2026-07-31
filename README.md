@@ -2,7 +2,7 @@
 title: SB AI Assistant
 emoji: "\U0001f6cd\ufe0f"
 colorFrom: red
-colorTo: orange
+colorTo: pink
 sdk: gradio
 app_file: app.py
 python_version: "3.13"
