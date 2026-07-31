@@ -5,5 +5,15 @@
     "interests": [],
     "travel_type": null,
     "com_style": null
+  },
+  "6b5840c6-7f5c-4bd1-96ac-dd63d7345e63": {
+    "preferred_brand": null,
+    "budget_range": null,
+    "interests": [
+      "Smartphones",
+      "Cashback"
+    ],
+    "travel_type": "Leisure",
+    "com_style": "casual"
   }
 }

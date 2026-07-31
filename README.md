@@ -3,8 +3,9 @@ title: SB AI Assistant
 emoji: "\U0001f6cd\ufe0f"
 colorFrom: red
 colorTo: orange
-sdk: docker
-app_port: 7860
+sdk: gradio
+app_file: app.py
+python_version: "3.13"
 pinned: false
 ---
 
