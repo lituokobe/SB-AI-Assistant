@@ -70,6 +70,11 @@ git push "$REMOTE_NAME" "$ORPHAN_BRANCH:$REMOTE_BRANCH" --force
 echo "OK: Pushed."
 
 # 8. Switch back and clean up.
+# Remove binary files from the working tree so they don't block the
+# checkout (main tracks them and will restore them automatically).
+for file in "${BINARY_FILES[@]}"; do
+    rm -f "$file"
+done
 git checkout main
 git branch -D "$ORPHAN_BRANCH"
 
