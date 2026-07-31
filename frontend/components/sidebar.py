@@ -36,6 +36,11 @@ def render_profile_html(profile: dict | None) -> str:
         for i in interests
     ) if interests else "\u2014"
 
+    # Resolve com_style display before the f-string (Python <3.12 disallows
+    # backslash escapes inside f-string expression parts).
+    em_dash = "\u2014"
+    com_display = com_style.title() if com_style != em_dash else com_style
+
     return f"""
     <div style="font-family:Roboto,sans-serif;padding:16px;">
       <h3 style="margin:0 0 16px 0;color:#FF3407;font-family:Roboto,sans-serif;font-weight:900;">\U0001f464 User Profile</h3>
@@ -58,7 +63,7 @@ def render_profile_html(profile: dict | None) -> str:
         </div>
         <div>
           <span style="color:#000000;font-size:13px;font-weight:400;">Communication Style</span><br>
-          <span style="font-size:16px;font-weight:700;color:#000000;">\U0001f4ac {com_style.title() if com_style != "\u2014" else com_style}</span>
+          <span style="font-size:16px;font-weight:700;color:#000000;">\U0001f4ac {com_display}</span>
         </div>
       </div>
       <p style="color:#FF3407;font-size:11px;text-align:center;margin-top:12px;font-weight:400;">
