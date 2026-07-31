@@ -1,0 +1,10 @@
+.venv/
+.idea/
+.git/
+.gitignore
+.python-version
+__pycache__/
+*.pyc
+uv.lock
+Dockerfile
+.dockerignore
