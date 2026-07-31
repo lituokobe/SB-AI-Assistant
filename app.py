@@ -29,6 +29,22 @@ import uvicorn
 
 from frontend.app import _CUSTOM_CSS, build_app
 
+# --- HF Spaces ZeroGPU compatibility ---------------------------------------
+# HF Spaces with ZeroGPU hardware auto-installs the `spaces` package and
+# requires at least one @spaces.GPU decorated function at module level.
+# This no-op placeholder satisfies that check without requesting GPU
+# resources.  On CPU hardware or local development, `spaces` is not
+# installed, so the import is optional.
+try:
+    import spaces
+
+    @spaces.GPU
+    def _zero_gpu_placeholder() -> None:
+        """Satisfy HF Spaces ZeroGPU startup check without using GPU."""
+        pass
+except ImportError:
+    pass
+
 
 def _start_backend() -> None:
     """Start the FastAPI backend in a background daemon thread."""
