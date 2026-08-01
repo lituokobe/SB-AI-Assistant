@@ -79,35 +79,29 @@ All LLM outputs and product data are **deterministically mocked** — no externa
 
 The prototype follows a strict three-tier separation to mirror a production environment:
 
-```text
-┌─────────────────┐      HTTP/JSON      ┌─────────────────┐                    ┌─────────────────┐
-│  Gradio Frontend │  <===============>  │  FastAPI Gateway │  <=== State ====>  │  LangGraph Core │
-│  (Chat UI +      │                      │  (Pydantic V2    │                    │  (Router,       │
-│   Profile Panel) │                      │   Contracts)     │                    │   Scoping,      │
-└─────────────────┘                      └─────────────────┘                    │   Guardrails)   │
-                                                                                 └────────┬────────┘
-                                                                                          │ Read
-                                                                                 ┌────────▼────────┐
-                                                                                 │   Mock Data     │
-                                                                                 │   (Products,    │
-                                                                                 │    Profiles,    │
-                                                                                 │    LLM Output)  │
-                                                                                 └─────────────────┘
+```mermaid
+flowchart LR
+    FE["Gradio Frontend<br/>(Chat UI + Profile Panel)"] <-->|HTTP / JSON| API["FastAPI Gateway<br/>(Pydantic V2 Contracts)"]
+    API <-->|State| LG["LangGraph Core<br/>(Router · Scoping · Guardrails)"]
+    LG -->|Read| MD["Mock Data<br/>(Products · Profiles · LLM Output)"]
 ```
 
 ### Agentic Pipeline
 
-```text
-START → [router] ── classifies intent ──────────────────────────────────────────────────────
-                 │
-                 ├── com_style ──────► [profile] ──► [response] ──► END
-                 │
-                 ├── general ────────► [response] ──► [profile] ──► END
-                 │
-                 └── digital/travel ─► [scoping] ──┬── (more scoping) ──► [profile] ──► END
-                                                   │
-                                                   └── (scoping done) ──► [search] ──► [guardrail]
-                                                                          ─► [response] ──► [profile] ──► END
+```mermaid
+flowchart TD
+    START([START]) --> router["router"]
+    router -- com_style --> profile["profile"]
+    router -- general --> response["response"]
+    router -- "digital / travel" --> scoping["scoping"]
+    scoping -- "phase = scoping<br/>(buttons shown)" --> profile
+    scoping -- "phase = ready<br/>(selections done)" --> search["search"]
+    search --> guardrail["guardrail"]
+    guardrail --> response
+    response -- "com_style shortcut" --> END([END])
+    response -- normal --> profile
+    profile -- com_style --> response
+    profile -- "all others" --> END
 ```
 
 **Key behaviours:**
@@ -133,11 +127,11 @@ START → [router] ── classifies intent ────────────
 
 ## Getting Started
 
-### Option 1: Live Demo (No Setup)
+### Live Demo
 
 Visit **[https://lituokobe-sb-ai-assistant.hf.space/](https://lituokobe-sb-ai-assistant.hf.space/)** and follow the three happy paths described in the [Live Demo](#live-demo) section above.
 
-### Option 2: Run Locally
+### Run Locally
 
 #### Prerequisites
 
@@ -174,26 +168,6 @@ uv run python frontend/app.py
 ```
 
 Open `http://localhost:7860` in your browser.
-
-### Option 3: Deploy to Hugging Face Spaces
-
-The project includes a deployment script that creates a clean orphan branch (excluding binary files) and force-pushes to Hugging Face Spaces:
-
-```bash
-# Prerequisites:
-#   1. Create a Space at https://huggingface.co/new-space (SDK: Gradio)
-#   2. Add the Space as a git remote:
-#      git remote add space https://huggingface.co/spaces/<your-username>/<your-space-name>
-#   3. Store your HF access token in git credentials:
-#      git push space main  # prompts for username (HF username) and password (token)
-
-./deploy_hf.sh
-```
-
-The script automatically:
-- Removes binary files (UI_demo.png) from the deployment (HF rejects them in git history)
-- Injects Hugging Face Spaces YAML metadata into README.md (hidden from GitHub)
-- Force-pushes a clean commit to the Space
 
 ---
 
