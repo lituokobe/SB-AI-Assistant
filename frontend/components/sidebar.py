@@ -67,7 +67,9 @@ def render_profile_html(profile: dict | None) -> str:
         </div>
       </div>
       <p style="color:#FF3407;font-size:11px;text-align:center;margin-top:12px;font-weight:400;">
-        Profile updates silently \u2014 no explicit confirmation.
+        Profile updates silently \u2014 no explicit confirmation.<br>
+        This panel is shown for demonstration purposes only;<br>
+        in production, users would see only the chat area.
       </p>
     </div>
     """

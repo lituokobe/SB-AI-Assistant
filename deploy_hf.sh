@@ -4,9 +4,10 @@
 # Product Intent:
 #   Hugging Face Spaces rejects binary files (e.g. UI_demo.png) in git
 #   history.  This script creates a clean orphan branch that excludes binary
-#   files and internal docs, then force-pushes it to the `space` remote's
-#   main branch.  The local main branch (with UI_demo.png for GitHub) is
-#   never modified.
+#   files and internal docs, injects HF Spaces YAML metadata into README.md,
+#   then force-pushes to the `space` remote's main branch.  The local main
+#   branch (with UI_demo.png and a clean README.md for GitHub) is never
+#   modified.
 #
 # Usage:
 #   ./deploy_hf.sh
@@ -60,16 +61,42 @@ if [ -n "$LEAKED" ]; then
 fi
 echo "OK: No binary or internal files staged."
 
-# 6. Commit the clean snapshot.
+# 6. Inject HF Spaces YAML metadata into README.md.
+#    Local README.md starts with "# SB AI Shopping Assistant" for a clean
+#    GitHub appearance.  HF Spaces requires YAML front matter to configure
+#    the Space (SDK, app_file, python_version).  We prepend it here so it
+#    only exists on the HF Space, not on GitHub.
+echo "Injecting HF Spaces metadata into README.md..."
+cat << 'HFYAML' > /tmp/_hf_yaml_header.txt
+---
+title: SB AI Assistant
+emoji: "\U0001f6cd\ufe0f"
+colorFrom: red
+colorTo: pink
+sdk: gradio
+app_file: app.py
+python_version: "3.13"
+pinned: false
+suggested_hardware: cpu-basic
+---
+
+HFYAML
+cat /tmp/_hf_yaml_header.txt README.md > /tmp/_hf_readme.md
+mv /tmp/_hf_readme.md README.md
+rm -f /tmp/_hf_yaml_header.txt
+git add README.md
+echo "OK: HF metadata injected into README.md."
+
+# 7. Commit the clean snapshot.
 git commit -m "Deploy SB AI Assistant to Hugging Face Spaces"
 echo "OK: Committed."
 
-# 7. Force-push to HF Space.
+# 8. Force-push to HF Space.
 echo "Pushing to $REMOTE_NAME:$REMOTE_BRANCH ..."
 git push "$REMOTE_NAME" "$ORPHAN_BRANCH:$REMOTE_BRANCH" --force
 echo "OK: Pushed."
 
-# 8. Switch back and clean up.
+# 9. Switch back and clean up.
 # Remove binary files from the working tree so they don't block the
 # checkout (main tracks them and will restore them automatically).
 for file in "${BINARY_FILES[@]}"; do

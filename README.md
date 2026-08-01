@@ -1,15 +1,3 @@
----
-title: SB AI Assistant
-emoji: "\U0001f6cd\ufe0f"
-colorFrom: red
-colorTo: pink
-sdk: gradio
-app_file: app.py
-python_version: "3.13"
-pinned: false
-suggested_hardware: cpu-basic
----
-
 # SB AI Shopping Assistant
 
 **An agentic AI prototype that transforms SB's cashback platform into a personalised shopping companion.**
@@ -18,18 +6,46 @@ suggested_hardware: cpu-basic
 
 ![SB AI Assistant UI](./UI_demo.png)
 
+> **Note:** The User Profile panel on the right side of the demo is for demonstration purposes only. In a production environment, users would only see the chat area — preferences are captured and applied silently in the background.
+
 ---
 
-## The Problem
+## Live Demo
 
-Today's AI shopping assistants suffer from two fundamental flaws that erode user trust and conversion:
+Try the prototype instantly — no setup required:
 
-1. **Information Overload** — Users searching for a phone are dumped onto a merchant homepage with hundreds of unscoped results. The cognitive burden of filtering falls entirely on the user, leading to abandonment.
-2. **Conversation Amnesia** — Assistants forget every preference the moment a session ends. A returning user who previously indicated a preference for Apple products is asked the same questions again, creating friction and frustration.
+**[https://lituokobe-sb-ai-assistant.hf.space/](https://lituokobe-sb-ai-assistant.hf.space/)**
 
-## The Solution
+The demo showcases three happy paths that highlight the core capabilities:
 
-The SB AI Assistant addresses both problems through two product innovations:
+### Happy Path 1: Digital Shopping — Guided Narrowing
+
+1. Type: *"I want to buy a phone with a good camera."*
+2. Three quick-tap buttons appear: **Look for a Brand**, **Compare Models**, **Find Max Cashback**.
+3. Click **Find Max Cashback**.
+4. The assistant returns phone options sorted by cashback rate (highest first), each with verified cashback percentages.
+5. Watch the **User Profile** panel on the right — "Smartphones" and "Cashback" appear under Interests, captured silently from the query and button click.
+
+### Happy Path 2: Travel Planning — Multi-Round Scoping
+
+1. Type: *"I want to book a trip to Sydney."*
+2. Trip-type buttons appear: **Family Trip**, **Business Trip**, **Leisure Trip**.
+3. Click **Business Trip**.
+4. Text fields for group size and travel dates appear.
+5. Fill in the details and click **Submit**.
+6. The assistant returns curated Sydney business travel packages with cashback rates.
+7. Watch the **User Profile** panel — "Business" appears under Travel Type.
+
+### Happy Path 3: Communication Style — Tone Adaptation
+
+1. Type: *"Talk to me in a casual tone."*
+2. The assistant responds in a casual tone: *"Sure thing! I'll keep it chill from now on."*
+3. Watch the **User Profile** panel — "Casual" appears under Communication Style.
+4. All subsequent responses adopt the casual tone automatically.
+
+---
+
+## Key Features
 
 ### Guided Narrowing with Quick-Tap Buttons
 
@@ -52,6 +68,12 @@ The assistant **silently captures preferences** from natural conversation and bu
 | "Talk to me in a casual tone" | Communication Style → Casual |
 
 All profile updates happen passively — the user never sees a form or a prompt.
+
+### Deterministic & Repeatable
+
+All LLM outputs and product data are **deterministically mocked** — no external API calls are made. This ensures every demo produces the same high-quality result, making it ideal for interviews and stakeholder presentations.
+
+---
 
 ## Architecture
 
@@ -84,8 +106,8 @@ START → [router] ── classifies intent ────────────
                  │
                  └── digital/travel ─► [scoping] ──┬── (more scoping) ──► [profile] ──► END
                                                    │
-                                                   └── (scoping done) ─► [search] ─► [guardrail]
-                                                                          ─► [response] ─► [profile] ─► END
+                                                   └── (scoping done) ──► [search] ──► [guardrail]
+                                                                          ─► [response] ──► [profile] ──► END
 ```
 
 **Key behaviours:**
@@ -107,11 +129,17 @@ START → [router] ── classifies intent ────────────
 | HTTP Client | HTTPX | Async frontend-to-backend communication |
 | Data Validation | Pydantic V2 | Strict API contracts and domain models |
 
-All LLM outputs and product data are **deterministically mocked** — no external API calls are made, ensuring reliable, repeatable demos.
+---
 
 ## Getting Started
 
-### Prerequisites
+### Option 1: Live Demo (No Setup)
+
+Visit **[https://lituokobe-sb-ai-assistant.hf.space/](https://lituokobe-sb-ai-assistant.hf.space/)** and follow the three happy paths described in the [Live Demo](#live-demo) section above.
+
+### Option 2: Run Locally
+
+#### Prerequisites
 
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/) package manager
@@ -121,7 +149,7 @@ All LLM outputs and product data are **deterministically mocked** — no externa
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### Installation
+#### Installation
 
 ```bash
 git clone https://github.com/lituokobe/SB-AI-Assistant.git
@@ -129,7 +157,7 @@ cd SB-AI-Assistant
 uv sync
 ```
 
-### Running the Application
+#### Running the Application
 
 **Terminal 1 — Backend (FastAPI + LangGraph):**
 
@@ -147,34 +175,27 @@ uv run python frontend/app.py
 
 Open `http://localhost:7860` in your browser.
 
-## Demo Flow
+### Option 3: Deploy to Hugging Face Spaces
 
-The prototype is designed to demonstrate the full product narrative in a single session:
+The project includes a deployment script that creates a clean orphan branch (excluding binary files) and force-pushes to Hugging Face Spaces:
 
-### Step 1: Digital Shopping — Guided Narrowing
+```bash
+# Prerequisites:
+#   1. Create a Space at https://huggingface.co/new-space (SDK: Gradio)
+#   2. Add the Space as a git remote:
+#      git remote add space https://huggingface.co/spaces/<your-username>/<your-space-name>
+#   3. Store your HF access token in git credentials:
+#      git push space main  # prompts for username (HF username) and password (token)
 
-1. Type: *"I want to buy a phone with a good camera."*
-2. The assistant routes to the Digital vertical and presents three quick-tap buttons: **Look for a Brand**, **Compare Models**, **Find Max Cashback**.
-3. Click **Find Max Cashback**.
-4. The assistant returns six phone options sorted by cashback rate (highest first), each with verified cashback percentages.
-5. **Check the User Profile panel** — "Smartphones" and "Cashback" now appear under Interests, captured silently from the query and button click.
+./deploy_hf.sh
+```
 
-### Step 2: Travel Planning — Multi-Round Scoping
+The script automatically:
+- Removes binary files (UI_demo.png) from the deployment (HF rejects them in git history)
+- Injects Hugging Face Spaces YAML metadata into README.md (hidden from GitHub)
+- Force-pushes a clean commit to the Space
 
-1. Type: *"I want to book a trip to Sydney."*
-2. The assistant routes to the Travel vertical and presents trip-type buttons: **Family Trip**, **Business Trip**, **Leisure Trip**.
-3. Click **Business Trip**.
-4. A second scoping round appears with text fields for group size and travel dates.
-5. Fill in the details and click **Submit**.
-6. The assistant returns curated Sydney business travel packages with cashback rates.
-7. **Check the User Profile panel** — "Business" now appears under Travel Type.
-
-### Step 3: Communication Style — Tone Adaptation
-
-1. Type: *"Talk to me in a casual tone."*
-2. The assistant acknowledges in a casual tone: *"Sure thing! I'll keep it chill from now on."*
-3. **Check the User Profile panel** — "Casual" now appears under Communication Style.
-4. All subsequent responses adopt the casual tone automatically.
+---
 
 ## Testing
 
@@ -196,6 +217,8 @@ Tests cover:
 | 6 | Cashback sorting | Products sorted by cashback rate (descending) |
 | 7 | Guardrail filtering | No irrelevant categories in results |
 | 8 | Formal tone | Default responses use formal tone before explicit change |
+
+---
 
 ## Project Structure
 
@@ -221,6 +244,8 @@ sb-ai-assistant/
 ├── test_flows.py           # Integration test suite (8 tests)
 └── pyproject.toml          # uv project configuration
 ```
+
+---
 
 ## Design Principles
 
