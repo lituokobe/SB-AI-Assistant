@@ -206,10 +206,11 @@ def build_app() -> gr.Blocks:
                     label="User Profile",
                 )
 
-        # Per-session UUID — each browser session gets a unique ID,
-        # so the profile is isolated per visitor (critical for HF Spaces
-        # where multiple users share the same process).
-        session_state = gr.State(value=lambda: str(uuid.uuid4()))
+        # Per-session ID is derived from gr.Request.session_hash inside each
+        # event handler.  gr.Request is auto-injected by Gradio based on the
+        # ``request: gr.Request`` type hint — its ``session_hash`` is unique per
+        # page load, making it the reliable way to isolate profiles across
+        # visitors on HF Spaces (where all users share one process).
 
         # --- Output list (order matters!) ---
         outputs = [
@@ -220,39 +221,45 @@ def build_app() -> gr.Blocks:
 
         # --- Event handlers ---
 
-        async def on_send(message, history, session_id):
+        async def on_send(message, history, request: gr.Request):
             """Handle typed message submission."""
             if not message.strip():
                 return build_no_change_outputs()
-            return await handle_user_message(message, history, session_id, session_id)
+            sid = request.session_hash if request and request.session_hash else str(uuid.uuid4())
+            return await handle_user_message(message, history, sid, sid)
 
-        async def on_btn1_click(btn_val, history, session_id):
+        async def on_btn1_click(btn_val, history, request: gr.Request):
             """Handle quick-tap button 1."""
-            return await handle_button_click(btn_val, history, session_id, session_id)
+            sid = request.session_hash if request and request.session_hash else str(uuid.uuid4())
+            return await handle_button_click(btn_val, history, sid, sid)
 
-        async def on_btn2_click(btn_val, history, session_id):
+        async def on_btn2_click(btn_val, history, request: gr.Request):
             """Handle quick-tap button 2."""
-            return await handle_button_click(btn_val, history, session_id, session_id)
+            sid = request.session_hash if request and request.session_hash else str(uuid.uuid4())
+            return await handle_button_click(btn_val, history, sid, sid)
 
-        async def on_btn3_click(btn_val, history, session_id):
+        async def on_btn3_click(btn_val, history, request: gr.Request):
             """Handle quick-tap button 3."""
-            return await handle_button_click(btn_val, history, session_id, session_id)
+            sid = request.session_hash if request and request.session_hash else str(uuid.uuid4())
+            return await handle_button_click(btn_val, history, sid, sid)
 
-        async def on_travel_submit(group, start, end, history, session_id):
+        async def on_travel_submit(group, start, end, history, request: gr.Request):
             """Handle travel field submission."""
-            return await handle_travel_submit(group, start, end, history, session_id, session_id)
+            sid = request.session_hash if request and request.session_hash else str(uuid.uuid4())
+            return await handle_travel_submit(group, start, end, history, sid, sid)
 
-        # Wire up events -- pass button component as input to get current label
-        send_btn.click(on_send, [msg_input, chatbot, session_state], outputs)
-        msg_input.submit(on_send, [msg_input, chatbot, session_state], outputs)
+        # Wire up events — gr.Request is auto-injected by Gradio based on the
+        # ``request: gr.Request`` type hint; it is NOT listed in inputs.
+        send_btn.click(on_send, [msg_input, chatbot], outputs)
+        msg_input.submit(on_send, [msg_input, chatbot], outputs)
 
-        btn1.click(on_btn1_click, [btn1, chatbot, session_state], outputs)
-        btn2.click(on_btn2_click, [btn2, chatbot, session_state], outputs)
-        btn3.click(on_btn3_click, [btn3, chatbot, session_state], outputs)
+        btn1.click(on_btn1_click, [btn1, chatbot], outputs)
+        btn2.click(on_btn2_click, [btn2, chatbot], outputs)
+        btn3.click(on_btn3_click, [btn3, chatbot], outputs)
 
         travel_submit.click(
             on_travel_submit,
-            [travel_group, travel_start, travel_end, chatbot, session_state],
+            [travel_group, travel_start, travel_end, chatbot],
             outputs,
         )
 
